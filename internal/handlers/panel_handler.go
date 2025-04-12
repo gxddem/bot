@@ -37,6 +37,8 @@ func (pc *PanelController) InteractionCreate(s *discordgo.Session, i *discordgo.
 			pc.AppendItemToList(s, i, data)
 		case "remove":
 			pc.RemoveItemFromList(s, i, data)
+		case "purge":
+			pc.PurgeList(s,i)
 		}
 		
 	}
@@ -60,6 +62,16 @@ func (pc *PanelController) RegisterCommands(s *discordgo.Session) error {
 	if err != nil {
 		return err
 	}
+
+	command = &discordgo.ApplicationCommand{
+		Name:        "purge",
+		Description: "Removes anything that panel currently contains",
+	}
+	_, err = s.ApplicationCommandCreate(s.State.User.ID, "", command)
+	if err != nil {
+		return err
+	}
+	
 
 	command = &discordgo.ApplicationCommand{
 		Name:        "delete",
@@ -225,7 +237,47 @@ func (pc *PanelController) RemoveItemFromList (s *discordgo.Session, i *discordg
 			Content: "Success",
 		},
 	})
+}
 
+func (pc *PanelController) PurgeList(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+	panel, err := pc.service.GetList(i.ChannelID)
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("Error: %v", err),
+			},
+		})
+		return
+	}
+
+	if err := pc.service.PurgeList(panel); err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("Error: %v", err),
+			},
+		})
+		return
+	}
+
+	_, err = s.ChannelMessageEdit(panel.ChannelID, panel.MessageID, formatList(panel.Items))
+	if err != nil {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("Error: %v", err),
+			},
+		})
+		return
+	}
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Success",
+		},
+	})
 }
 
 

@@ -44,3 +44,9 @@ func (ps *PanelStorage) RemoveItemFromList(panel *entities.Panel, index int) err
 
 	return nil
 }
+
+func (ps *PanelStorage) PurgeList(panel *entities.Panel) error {
+	panel.Items = make([]string, 0)
+
+	return nil
+}

@@ -8,6 +8,7 @@ type PanelStorage interface{
 	CreateList(string) (*entities.Panel, error)
 	GetList(string) (*entities.Panel, error)
 	RemoveItemFromList(*entities.Panel, int) error
+	PurgeList(*entities.Panel) error
 }
 
 type PanelService struct {
@@ -46,4 +47,8 @@ func (ps *PanelService) AppendItemToList (panel *entities.Panel, data string) er
 
 func (ps *PanelService) RemoveItemFromList (panel *entities.Panel, index int) error {
 	return ps.Storage.RemoveItemFromList(panel, index)
+}
+
+func (ps *PanelService) PurgeList(panel *entities.Panel) error {
+	return ps.Storage.PurgeList(panel)
 }
